@@ -10,42 +10,51 @@ import java.util.List;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/users") // Base URL for this controller
+@RequestMapping("/users")
 public class Controller {
 
     @Autowired
-    private ServiceBus serviceBus; // Service layer for business logic
+    private ServiceBus serviceBus;
 
-    // Create a new user
     @PostMapping
     public ResponseEntity<UserEntity> createUser(@RequestBody UserEntity user) {
-        return ResponseEntity.ok(serviceBus.SaveUserEntity(user)); // Directly return the response
+        UserEntity savedUser = serviceBus.SaveUserEntity(user);
+        return ResponseEntity.ok(savedUser);
     }
 
-    // Get all users
     @GetMapping
     public ResponseEntity<List<UserEntity>> getAllUsers() {
-        return ResponseEntity.ok(serviceBus.getAllUserEntity()); // Directly return the list of users
+        List<UserEntity> users = serviceBus.getAllUserEntity();
+        return ResponseEntity.ok(users);
     }
 
-    // Get a user by ID
     @GetMapping("/{id}")
     public ResponseEntity<UserEntity> getUserById(@PathVariable int id) {
         Optional<UserEntity> user = serviceBus.getUserEntityById(id);
-        return user.map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.notFound().build());
+        if (user.isPresent()) {
+            return ResponseEntity.ok(user.get());
+        } else {
+            return ResponseEntity.notFound().build();
+        }
     }
 
-    // Update a user
     @PutMapping("/{id}")
     public ResponseEntity<UserEntity> updateUser(@PathVariable int id, @RequestBody UserEntity userDetails) {
         UserEntity updatedUser = serviceBus.updateUserEntity(id, userDetails);
-        return updatedUser != null ? ResponseEntity.ok(updatedUser) : ResponseEntity.notFound().build();
+        if (updatedUser != null) {
+            return ResponseEntity.ok(updatedUser);
+        } else {
+            return ResponseEntity.notFound().build();
+        }
     }
 
-    // Delete a user
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteUser(@PathVariable int id) {
-        return serviceBus.deleteUserEntity(id) ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();
+        boolean isDeleted = serviceBus.deleteUserEntity(id);
+        if (isDeleted) {
+            return ResponseEntity.noContent().build();
+        } else {
+            return ResponseEntity.notFound().build();
+        }
     }
 }
